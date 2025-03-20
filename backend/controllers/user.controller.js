@@ -11,9 +11,16 @@ import { Comment } from "../models/comment.model.js"
 
 export const register = async (req, res) => {
     try {
+        console.log("Register request received:", {
+            username: req.body.username,
+            email: req.body.email,
+            gender: req.body.gender
+        });
+
         const { username, email, password, gender } = req.body
 
         if (!username || !email || !password || !gender) {
+            console.log("Missing registration fields");
             return res.status(404).json({
                 message: "Something is missing",
                 success: false
@@ -21,6 +28,8 @@ export const register = async (req, res) => {
         }
 
         const user = await User.findOne({ email })
+        console.log("Existing user found:", user ? "Yes" : "No");
+
         if (user) {
             return res.status(404).json({
                 message: "Try different email.",
@@ -29,6 +38,7 @@ export const register = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
+        console.log("Password hashed successfully");
 
         await User.create({
             username,
@@ -36,6 +46,7 @@ export const register = async (req, res) => {
             gender,
             password: hashedPassword
         })
+        console.log("New user created successfully");
 
         return res.status(200).json({
             message: "Account created successfully",
@@ -48,9 +59,11 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
     try {
+        console.log("Login request received:", req.body);
         const { email, password } = req.body
 
         if (!email || !password) {
+            console.log("Missing credentials");
             return res.status(401).json({
                 message: "Something is missing",
                 success: false
@@ -58,6 +71,8 @@ export const login = async (req, res) => {
         }
 
         let user = await User.findOne({ email })
+        console.log("User found:", user ? "Yes" : "No");
+        
         if (!user) {
             return res.status(401).json({
                 message: "User not registered.",
@@ -66,6 +81,7 @@ export const login = async (req, res) => {
         }
 
         const isPasswordMatch = await bcrypt.compare(password, user.password)
+        console.log("Password match:", isPasswordMatch);
 
         if (!isPasswordMatch) {
             return res.status(401).json({
